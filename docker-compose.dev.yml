@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  ie403-backend:
+    container_name: ie403-backend
+    image: haphuthinh/ie403-backend:release-3114c69b6c06eb166a00a2d1b439c84d0649049c
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6651:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "8"
+          memory: 8G
+    volumes:
+      - ie403-backend:/app
+
+volumes:
+  ie403-backend:

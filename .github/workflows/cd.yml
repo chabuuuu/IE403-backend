@@ -1,0 +1,76 @@
+name: "[CD] IE403"
+
+env:
+  IMAGE_NAME: haphuthinh/ie403-backend:${{ github.ref_name }}-${{ github.sha }}
+  CONTAINER_NAME: ie403-backend
+  DEPLOY_FOLDER: /home/ubuntu/project/ie403-backend
+  ENV_FILE_PATH: /home/ubuntu/project/env_file/ie403-backend/.env
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      # Build Docker image and push to Docker Hub
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME .
+
+      # Push Docker image to Docker Hub
+      - name: Push Docker image to Docker Hub
+        run: docker push $IMAGE_NAME
+
+      # Clean old docker compose script and old env file
+      - name: Clean old docker compose script and old env file
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          script: |
+            rm -rf ${{ env.DEPLOY_FOLDER }}/*
+
+      # Copy new docker compose script to server
+      - name: Copy new docker compose script to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+
+          source: "./docker-compose.yml"
+          target: ${{ env.DEPLOY_FOLDER }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_publish
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+
+          script: |
+            cp ${{ env.ENV_FILE_PATH }} ${{ env.DEPLOY_FOLDER }}/.env
+            cd ${{ env.DEPLOY_FOLDER }}
+            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose pull  
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose down     
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose up -d
