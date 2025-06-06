@@ -16,14 +16,14 @@ print("Bắt đầu quá trình khởi tạo cho production...")
 
 # 1.1. Cấu hình Model và Thiết bị (giữ nguyên)
 HF_TOKEN = os.environ.get("HF_TOKEN") 
-MODEL_NAME_OR_PATH = "./model/Vistral-7B-Chat"
+MODEL_NAME = "Viet-Mistral/Vistral-7B-Chat"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model_and_dependencies():
     """Tải model, tokenizer và pipeline. Tác vụ này rất nặng."""
-    print(f"Đang tải model từ đường dẫn cục bộ: '{MODEL_NAME_OR_PATH}'...")
+    print(f"Đang tải model '{MODEL_NAME}' lên thiết bị '{DEVICE}'...")
     
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME_OR_PATH)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=HF_TOKEN)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -31,14 +31,15 @@ def load_model_and_dependencies():
     try:
         if torch.cuda.is_available():
             model = AutoModelForCausalLM.from_pretrained(
-                MODEL_NAME_OR_PATH,
+                MODEL_NAME,
                 torch_dtype=torch.float16,
-                device_map="auto"
+                device_map="auto",
+                token=HF_TOKEN
             )
         else:
-            model = AutoModelForCausalLM.from_pretrained(MODEL_NAME_OR_PATH)
+            model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, token=HF_TOKEN)
     except Exception as e:
-        print(f"LỖI NGHIÊM TRỌNG: Không thể tải model từ đường dẫn cục bộ. Chi tiết: {e}")
+        print(f"LỖI NGHIÊM TRỌNG: Không thể tải model. Vui lòng kiểm tra lại tên model và HF_TOKEN. Chi tiết: {e}")
         raise
     
     model.eval()

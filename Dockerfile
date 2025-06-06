@@ -25,8 +25,7 @@ COPY . /app
 # Chạy script để tải model. Model sẽ được lưu vào trong layer của image.
 # Bước này sẽ mất rất nhiều thời gian khi build image lần đầu.
 # RUN python download-model.py
-RUN --mount=type=secret,id=app-env,target=/app/.env python download-model.py
-RUN --mount=type=secret,id=app-env,target=/app/.env python download-model.py
+# RUN --mount=type=secret,id=app-env,target=/app/.env python download-model.py
 
 
 # Mở cổng mặc định của FastAPI
