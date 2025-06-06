@@ -70,7 +70,7 @@ jobs:
           script: |
             cp ${{ env.ENV_FILE_PATH }} ${{ env.DEPLOY_FOLDER }}/.env
             cd ${{ env.DEPLOY_FOLDER }}
-            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose pull  
-            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose down     
-            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} docker compose up -d
+            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} sudo docker compose pull  
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} sudo docker compose down     
+            IMAGE_VERSION=${{ github.ref_name }}-${{ github.sha }} sudo docker compose up -d
