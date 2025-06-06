@@ -26,7 +26,15 @@ jobs:
 
       # Build Docker image and push to Docker Hub
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME .
+        env:
+          # Đặt tên biến môi trường (ví dụ: SECRET_ENV_CONTENT)
+          # và gán giá trị cho nó từ các GitHub Secrets.
+          # Chúng ta sẽ ghép các secret thành một chuỗi có định dạng .env
+          SECRET_ENV_CONTENT: |
+            HUGGINGFACE_TOKEN=${{ secrets.HF_TOKEN }}
+        run: |
+            docker build -t $IMAGE_NAME . \
+            --secret id=app-env,env=SECRET_ENV_CONTENT
 
       # Push Docker image to Docker Hub
       - name: Push Docker image to Docker Hub
